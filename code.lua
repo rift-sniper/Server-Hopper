@@ -16,6 +16,19 @@ local BLACKLIST_CLEAR_INTERVAL = 600
 local function jsone(str) return http:JSONEncode(str) end
 local function jsond(str) return http:JSONDecode(str) end
 
+-- Safe JSON decode function
+local function safeJsond(str, context)
+    local success, result = pcall(function()
+        return http:JSONDecode(str)
+    end)
+    if success then
+        return result
+    else
+        warn("JSON decode error in", context, "Error:", result, "Input:", str)
+        return nil
+    end
+end
+
 -- Initialize folder and JobId storage
 if not isfolder(folderpath) then
     makefolder(folderpath)
@@ -24,10 +37,20 @@ end
 
 local data
 if isfile(JobIdStorage) then
-    data = jsond(readfile(JobIdStorage))
+    local content = readfile(JobIdStorage)
+    data = safeJsond(content, "JobIdStorage read")
+    if not data or not data.JobIds then
+        warn("Failed to parse JobIdStorage or invalid format, resetting to default")
+        data = { JobIds = {} }
+        pcall(function()
+            writefile(JobIdStorage, jsone(data))
+        end)
+    end
 else
     data = { JobIds = {} }
-    writefile(JobIdStorage, jsone(data))
+    pcall(function()
+        writefile(JobIdStorage, jsone(data))
+    end)
     print("Created File", JobIdStorage)
 end
 
@@ -42,15 +65,27 @@ local function cleanOldJobIds()
         end
     end
     data.JobIds = newJobIds
-    writefile(JobIdStorage, jsone(data))
+    pcall(function()
+        writefile(JobIdStorage, jsone(data))
+    end)
 end
 
 -- Add current JobId to the blacklist
 cleanOldJobIds()
 local currentTime = os.time()
-if not table.find(data.JobIds, function(entry) return entry.JobID == JobId end) then
+local function hasJobId(jobId)
+    for _, entry in ipairs(data.JobIds) do
+        if entry.JobID == jobId then
+            return true
+        end
+    end
+    return false
+end
+if not hasJobId(JobId) then
     table.insert(data.JobIds, { Time = currentTime, JobID = JobId })
-    writefile(JobIdStorage, jsone(data))
+    pcall(function()
+        writefile(JobIdStorage, jsone(data))
+    end)
 end
 
 -- Wait for game to load
@@ -66,29 +101,45 @@ end)
 local servers = {}
 local cursor = ''
 while cursor and #servers <= 0 do
-    local req = request({Url = ("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100&cursor%s"):format(PlaceId, cursor)})
-    local body = jsond(req.Body)
-    if body and body.data then
-        coroutine.wrap(function()
-            for i, v in next, body.data do
-                if typeof(v) == 'table' and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and not table.find(data['JobIds'], v.id) then
-                    table.insert(servers, 1, v.id)
+    local success, req = pcall(function()
+        return request({Url = ("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100&cursor%s"):format(PlaceId, cursor)})
+    end)
+    if success and req and req.Body then
+        print("Server API response:", req.Body)
+        local body = safeJsond(req.Body, "Server API response")
+        if body and body.data then
+            coroutine.wrap(function()
+                for i, v in next, body.data do
+                    if typeof(v) == 'table' and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and not hasJobId(v.id) then
+                        table.insert(servers, 1, v.id)
+                    end
                 end
+            end)()
+            if body.nextPageCursor then
+                cursor = body.nextPageCursor
+            else
+                cursor = nil
             end
-        end)()
-        if body.nextPageCursor then
-            cursor = body.nextPageCursor
         else
+            warn("Failed to parse server response")
             cursor = nil
         end
+    else
+        warn("HTTP request failed")
+        cursor = nil
     end
-    task.wait()
+    task.wait(1) -- Delay to avoid rate-limiting
 end
 
 -- Teleport to a random server
 while #servers > 0 do
     local random = servers[math.random(1, #servers)]
     print("Joining New Server...\n")
-    TeleportService:TeleportToPlaceInstance(PlaceId, random, lp)
+    local success, errorMsg = pcall(function()
+        TeleportService:TeleportToPlaceInstance(PlaceId, random, lp)
+    end)
+    if not success then
+        warn("Teleport failed:", errorMsg)
+    end
     task.wait(1)
 end
