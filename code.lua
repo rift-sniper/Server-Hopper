@@ -4,10 +4,8 @@ assert(typeof(request) and typeof(isfile) and typeof(makefolder) and typeof(isfo
 local game = game
 local PlaceId = game.PlaceId
 local JobId = game.JobId
-local PlaceIdString = tostring(PlaceId)
-local folderpath = "ServerHopper"
-local PlaceFolder = folderpath .. "\\" .. PlaceIdString
-local JobIdStorage = PlaceFolder .. "\\JobIdStorage.json"
+local folderpath = "RiftSniperV3"
+local JobIdStorage = folderpath .. "\\JobIdStorage.json"
 local Players = game:FindService("Players")
 local http = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
@@ -15,31 +13,56 @@ local TeleportService = game:GetService("TeleportService")
 local function jsone(str) return http:JSONEncode(str) end
 local function jsond(str) return http:JSONDecode(str) end
 
--- Initialize folders and JobId storage
+-- Initialize folder and JobId storage
 if not isfolder(folderpath) then
     makefolder(folderpath)
     print("Created Folder", folderpath)
-end
-if not isfolder(PlaceFolder) then
-    makefolder(PlaceFolder)
-    print("Created PlaceFolder", PlaceFolder)
 end
 
 local data
 if isfile(JobIdStorage) then
     data = jsond(readfile(JobIdStorage))
 else
-    data = {
-        JobIds = {}
-    }
+    data = { JobIds = {} }
     writefile(JobIdStorage, jsone(data))
-    print("Created JobIdStorage", JobIdStorage)
+    print("Created File", JobIdStorage)
+end
+
+-- Function to pretty-print
+local function prettyPrintArray(arr)
+    if #arr == 0 then
+        return "[]"
+    end
+
+    local lines = { "[" }
+    for i, entry in ipairs(arr) do
+        local formattedLine = "    { Time: " .. entry.Time .. ", JobID: " .. entry.JobID .. " }" .. (i == #arr and "" or ",")
+        table.insert(lines, formattedLine)
+    end
+    table.insert(lines, "]")
+    return table.concat(lines, "\n")
+end
+
+-- Function to clean old JobIDs
+local function cleanOldJobIds()
+    local currentTime = os.time()
+    local tenMinutesAgo = currentTime - 600
+    local newJobIds = {}
+    for _, entry in ipairs(data.JobIds) do
+        if entry.Time > tenMinutesAgo then
+            table.insert(newJobIds, entry)
+        end
+    end
+    data.JobIds = newJobIds
+    writefile(JobIdStorage, jsone(data))
 end
 
 -- Add current JobId to the blacklist
-if not table.find(data['JobIds'], JobId) then
-    table.insert(data['JobIds'], JobId)
-    writefile(JobIdStorage, jsone(data))
+cleanOldJobIds()
+local currentTime = os.time()
+if not table.find(data.JobIds, function(entry) return entry.JobID == JobId end) then
+    table.insert(data.JobIds, { Time = currentTime, JobID = JobId })
+    writefile(JobIdStorage, prettyPrintArray(data.JobIds))
 end
 
 -- Wait for game to load
@@ -52,7 +75,7 @@ local success, errorMsg = pcall(function()
 end)
 
 if not success then
-    rconsoleprint("Error executing GitHub script\nError:\n" .. tostring(errorMsg) .. "\n")
+    print("Error executing script\nError:\n" .. tostring(errorMsg) .. "\n")
 end
 
 -- Server hopping logic
