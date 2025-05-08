@@ -103,6 +103,7 @@ end
 -- Teleport to a random server
 while #servers > 0 do
     local random = servers[math.random(1, #servers)]
+    print("Joining New Server...\n")
     TeleportService:TeleportToPlaceInstance(PlaceId, random, lp)
     task.wait(1)
 end
