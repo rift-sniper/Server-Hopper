@@ -10,6 +10,9 @@ local Players = game:FindService("Players")
 local http = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 
+-- Configurable time wait for clearing servers from blacklist (in seconds)
+local BLACKLIST_CLEAR_INTERVAL = 600
+
 local function jsone(str) return http:JSONEncode(str) end
 local function jsond(str) return http:JSONDecode(str) end
 
@@ -46,7 +49,7 @@ end
 -- Function to clean old JobIDs
 local function cleanOldJobIds()
     local currentTime = os.time()
-    local tenMinutesAgo = currentTime - 600
+    local tenMinutesAgo = currentTime - BLACKLIST_CLEAR_INTERVAL
     local newJobIds = {}
     for _, entry in ipairs(data.JobIds) do
         if entry.Time > tenMinutesAgo then
@@ -73,10 +76,6 @@ local lp = Players.LocalPlayer
 local success, errorMsg = pcall(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rift-sniper/Rift-Sniper-V3/refs/heads/main/code.lua"))()
 end)
-
-if not success then
-    print("Error executing script\nError:\n" .. tostring(errorMsg) .. "\n")
-end
 
 -- Server hopping logic
 local servers = {}
