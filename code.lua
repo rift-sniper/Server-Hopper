@@ -101,34 +101,23 @@ end)
 local servers = {}
 local cursor = ''
 while cursor and #servers <= 0 do
-    local success, req = pcall(function()
-        return request({Url = ("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100&cursor%s"):format(PlaceId, cursor)})
-    end)
-    if success and req and req.Body then
-        print("Server API response:", req.Body)
-        local body = safeJsond(req.Body, "Server API response")
-        if body and body.data then
-            coroutine.wrap(function()
-                for i, v in next, body.data do
-                    if typeof(v) == 'table' and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and not hasJobId(v.id) then
-                        table.insert(servers, 1, v.id)
-                    end
+    local req = request({Url = ("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100&cursor%s"):format(PlaceId, cursor)})
+    local body = jsond(req.Body)
+    if body and body.data then
+        coroutine.wrap(function()
+            for i, v in next, body.data do
+                if typeof(v) == 'table' and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and not table.find(data['JobIds'], v.id) then
+                    table.insert(servers, 1, v.id)
                 end
-            end)()
-            if body.nextPageCursor then
-                cursor = body.nextPageCursor
-            else
-                cursor = nil
             end
+        end)()
+        if body.nextPageCursor then
+            cursor = body.nextPageCursor
         else
-            warn("Failed to parse server response")
             cursor = nil
         end
-    else
-        warn("HTTP request failed")
-        cursor = nil
     end
-    task.wait(1) -- Delay to avoid rate-limiting
+    task.wait(1)
 end
 
 -- Teleport to a random server
