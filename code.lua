@@ -39,7 +39,7 @@ local function prettyPrintArray(arr)
 
     local lines = { "[" }
     for i, entry in ipairs(arr) do
-        local formattedLine = "    { Time: " .. entry.Time .. ", JobID: " .. entry.JobID .. " }" .. (i == #arr and "" or ",")
+        local formattedLine = "    { Time: " .. entry.Time .. ", JobID: " .. entry.JobID .. " }," .. (i == #arr and "" or ",")
         table.insert(lines, formattedLine)
     end
     table.insert(lines, "]")
