@@ -48,7 +48,7 @@ local lp = Players.LocalPlayer
 
 -- Load script
 local success, errorMsg = pcall(function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/rift-sniper/Rift-Sniper-V3/refs/heads/main/Rift%20Sniper%20V3.lua?token=GHSAT0AAAAAADDF2ZOSJPW4VHCKOOEM7B3K2A36QFA"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rift-sniper/Rift-Sniper-V3/refs/heads/main/Rift%20Sniper%20V3.lua?token=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"))()
 end)
 
 if not success then
