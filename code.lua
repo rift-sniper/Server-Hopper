@@ -1,3 +1,5 @@
+print("Joining New Server...\n")
+
 if syn and syn.request then request = syn.request end
 assert(typeof(request) and typeof(isfile) and typeof(makefolder) and typeof(isfolder) and typeof(readfile) and typeof(writefile) == 'function', "Missing functions")
 
@@ -123,7 +125,6 @@ end
 -- Teleport to a random server
 while #servers > 0 do
     local random = servers[math.random(1, #servers)]
-    print("Joining New Server...\n")
     local success, errorMsg = pcall(function()
         TeleportService:TeleportToPlaceInstance(PlaceId, random, lp)
     end)
