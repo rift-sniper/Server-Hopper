@@ -57,7 +57,7 @@ local function cleanOldJobIds()
         end
     end
     data.JobIds = newJobIds
-    writefile(JobIdStorage, jsone(data))
+    writefile(JobIdStorage, prettyPrintArray(data))
 end
 
 -- Add current JobId to the blacklist
