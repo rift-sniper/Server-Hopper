@@ -31,21 +31,6 @@ else
     print("Created File", JobIdStorage)
 end
 
--- Function to pretty-print
-local function prettyPrintArray(arr)
-    if #arr == 0 then
-        return "[]"
-    end
-
-    local lines = { "[" }
-    for i, entry in ipairs(arr) do
-        local formattedLine = "    { Time: " .. entry.Time .. ", JobID: " .. entry.JobID .. " }," .. (i == #arr and "" or ",")
-        table.insert(lines, formattedLine)
-    end
-    table.insert(lines, "]")
-    return table.concat(lines, "\n")
-end
-
 -- Function to clean old JobIDs
 local function cleanOldJobIds()
     local currentTime = os.time()
