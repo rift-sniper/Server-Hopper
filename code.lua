@@ -42,7 +42,7 @@ local function cleanOldJobIds()
         end
     end
     data.JobIds = newJobIds
-    writefile(JobIdStorage, prettyPrintArray(data))
+    writefile(JobIdStorage, jsone(data))
 end
 
 -- Add current JobId to the blacklist
@@ -50,7 +50,7 @@ cleanOldJobIds()
 local currentTime = os.time()
 if not table.find(data.JobIds, function(entry) return entry.JobID == JobId end) then
     table.insert(data.JobIds, { Time = currentTime, JobID = JobId })
-    writefile(JobIdStorage, prettyPrintArray(data.JobIds))
+    writefile(JobIdStorage, jsone(data))
 end
 
 -- Wait for game to load
