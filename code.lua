@@ -124,7 +124,7 @@ end
 if #servers > 0 then
     local randomJobId = servers[math.random(1, #servers)]
     local success, errorMsg = pcall(function()
-        TeleportService:TeleportToPlaceInstance(PlaceId, randomJobId, lp)
+        game:GetService('TeleportService'):TeleportToPlaceInstance(PlaceId, randomJobId, lp)
     end)
     if not success then
         warn("Teleport failed:", errorMsg)
