@@ -1,6 +1,6 @@
 print("\nNew Server Joined")
 
-if syn and syn.request then request = syn.request end
+if request then request = request end
 assert(typeof(request) and typeof(isfile) and typeof(makefolder) and typeof(isfolder) and typeof(readfile) and typeof(writefile) == 'function', "Missing functions")
 
 local game = game
