@@ -121,13 +121,12 @@ while cursor and #servers <= 0 do
 end
 
 -- Teleport to a random server
-while #servers > 0 do
-    local random = servers[math.random(1, #servers)]
+if #servers > 0 then
+    local randomJobId = servers[math.random(1, #servers)]
     local success, errorMsg = pcall(function()
-        TeleportService:TeleportToPlaceInstance(PlaceId, random, lp)
+        TeleportService:TeleportToPlaceInstance(PlaceId, randomJobId, lp)
     end)
     if not success then
         warn("Teleport failed:", errorMsg)
     end
-    task.wait(1)
 end
