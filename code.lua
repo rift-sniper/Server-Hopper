@@ -95,9 +95,7 @@ repeat task.wait() until game:IsLoaded() and Players.LocalPlayer
 local lp = Players.LocalPlayer
 
 -- Load script
-local success, errorMsg = pcall(function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/rift-sniper/Rift-Sniper-V3/refs/heads/main/code.lua"))()
-end)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/rift-sniper/Rift-Sniper-V3/refs/heads/main/code.lua"))()
 
 -- Server hopping logic
 local servers = {}
