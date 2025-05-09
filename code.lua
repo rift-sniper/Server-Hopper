@@ -100,51 +100,34 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/rift-sniper/Rift-Snip
 -- Server hopping logic
 local servers = {}
 local cursor = ''
-print("Starting server hopping process...")
 while cursor and #servers <= 0 do
-    print("Fetching server list with cursor: " .. (cursor or "none"))
     local req = request({Url = ("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100&cursor%s"):format(PlaceId, cursor)})
     local body = jsond(req.Body)
     if body and body.data then
-        print("Received server data, processing...")
         coroutine.wrap(function()
             for i, v in next, body.data do
                 if typeof(v) == 'table' and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and not table.find(data['JobIds'], v.id) then
-                    print(string.format("Found valid server: %s (Players: %d/%d)", v.id, v.playing, v.maxPlayers))
                     table.insert(servers, 1, v.id)
                 end
             end
         end)()
         if body.nextPageCursor then
             cursor = body.nextPageCursor
-            print("Next page cursor available: " .. cursor)
         else
             cursor = nil
-            print("No more pages to fetch")
         end
-    else
-        print("Failed to fetch server data")
     end
     task.wait(1)
 end
 
 -- Teleport to a random server
-if #servers == 0 then
-    print("No valid servers found to hop to")
-else
-    print(string.format("Found %d valid servers to hop to", #servers))
-    while #servers > 0 do
-        local random = servers[math.random(1, #servers)]
-        print(string.format("Attempting to join server: %s", random))
-        local success, errorMsg = pcall(function()
-            TeleportService:TeleportToPlaceInstance(PlaceId, random, lp)
-        end)
-        if success then
-            print(string.format("Successfully initiated teleport to server: %s", random))
-        else
-            print(string.format("Failed to teleport to server %s: %s", random, errorMsg))
-        end
-        table.remove(servers, table.find(servers, random))
-        task.wait(1)
+while #servers > 0 do
+    local random = servers[math.random(1, #servers)]
+    local success, errorMsg = pcall(function()
+        TeleportService:TeleportToPlaceInstance(PlaceId, random, lp)
+    end)
+    if not success then
+        warn("Teleport failed:", errorMsg)
     end
+    task.wait(1)
 end
